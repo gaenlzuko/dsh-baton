@@ -11,6 +11,7 @@ import { BatonHost } from './lib/protocol.js'
 import { RunRegistry } from './lib/state.js'
 import { batonHome } from './lib/socket.js'
 import { prepare } from './lib/evidence.js'
+import { reviewRequest } from './lib/review.js'
 import { RunWatcher } from './lib/watcher.js'
 import {
   formatAnswer,
@@ -106,7 +107,7 @@ export function apply(ctx) {
 
   ctx.tools.register({
     name: 'baton_send',
-    description: 'Hand a task to an independent Harness session through dsh-baton and return immediately. The session runs live in the Harness sidebar. Omit session_id to start a new session (then cwd or workspace_id is required), or pass session_id to continue an existing session. When the run ends, or stops to ask a person, this session receives one wake-up message with the result and dsh-baton evidence: changed files, check exit codes and output tails. Pass checks to have those commands run when the run ends. Check progress with baton_status or baton_read; baton_cancel stops it.',
+    description: 'Hand a task to an independent Harness session through dsh-baton and return immediately. The session runs live in the Harness sidebar. Omit session_id to start a new session (then cwd or workspace_id is required), or pass session_id to continue an existing session. When the run ends, or stops to ask a person, this session receives one wake-up message with the result and dsh-baton evidence: changed files, check exit codes and output tails. Pass checks to have those commands run when the run ends; with checks, a short request for a read-only self-check and a requirement table is appended to the task. Check progress with baton_status or baton_read; baton_cancel stops it.',
     parameters: {
       type: 'object',
       additionalProperties: false,
@@ -184,7 +185,7 @@ export function apply(ctx) {
           // Evidence is optional.
         }
       }
-      const payload = { message: args.message }
+      const payload = { message: checks.length > 0 ? args.message + reviewRequest(args.message) : args.message }
       if (args.session_id) payload.session_id = String(args.session_id)
       else if (args.workspace_id) payload.workspace_id = String(args.workspace_id)
       else payload.cwd = String(args.cwd)

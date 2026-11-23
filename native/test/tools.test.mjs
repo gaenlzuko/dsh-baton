@@ -163,6 +163,17 @@ test('baton_send passes the task and records the run for the asking agent', asyn
   assert.equal(saved.runs['hrun-test-1'].agentSessionId, 'agent-A')
 })
 
+test('baton_send appends the self-check request when checks are given', async () => {
+  await run(
+    'baton_send',
+    { message: 'do the thing', cwd: 'C:\\ws', checks: ['node --version'] },
+    { agent: { session: { header: { id: 'agent-A' } } } },
+  )
+  assert.match(lastSend.message, /do the thing/)
+  assert.match(lastSend.message, /read-only sub-agent/)
+  assert.match(lastSend.message, /requirement \| met/)
+})
+
 test('baton_status renders a finished run', async () => {
   const text = await run('baton_status', { run_id: 'hrun-test-1' })
   assert.match(text, /state: completed/)

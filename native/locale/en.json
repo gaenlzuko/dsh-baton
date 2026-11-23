@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Baton Native",
-    "description": "Native DSH tools for dsh-baton: hand a task to an independent Harness session and get an evidence-backed result back when it ends.",
+    "description": "Native DSH tools for dsh-baton: hand a task to an independent Harness session and get an evidence-backed result back when it ends. Adds baton_workspaces / baton_send / baton_status / baton_read / baton_cancel / baton_answer / baton_runs; the delegated session runs live in the sidebar and a finished run wakes the asking session once with changed files and check results.",
     "detail": "docs/DETAIL.md"
   }
 }

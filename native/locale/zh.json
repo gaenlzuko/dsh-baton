@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Baton 原生工具",
-    "description": "dsh-baton 的 DSH 原生工具：把任务交给独立 Harness 会话，结束时把带证据的结果带回发起会话。",
-    "detail": "docs/DETAIL.md"
+    "description": "dsh-baton 的 DSH 原生工具：把一个任务交给独立的 Harness 会话，结束时把带证据的结果带回发起会话。新增 baton_workspaces / baton_send / baton_status / baton_read / baton_cancel / baton_answer / baton_runs；被派发的会话在侧栏实时运行，run 结束后只唤醒发起会话一次，并带回改动文件与检查结果。",
+    "detail": "docs/DETAIL.zh.md"
   }
 }
