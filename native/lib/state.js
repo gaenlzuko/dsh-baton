@@ -68,6 +68,14 @@ export class RunRegistry {
     return true
   }
 
+  markInputNotified(runId, at = new Date().toISOString()) {
+    const entry = this.#runs.get(runId)
+    if (!entry) return false
+    entry.inputNotifiedAt = at
+    this.#save()
+    return true
+  }
+
   get(runId) {
     return this.#runs.get(runId)
   }

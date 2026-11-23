@@ -9,6 +9,9 @@
 // M3 adds the end-of-run wake-up and the evidence chain.
 import { BatonHost } from './lib/protocol.js'
 import { RunRegistry } from './lib/state.js'
+import { batonHome } from './lib/socket.js'
+import { prepare } from './lib/evidence.js'
+import { RunWatcher } from './lib/watcher.js'
 import {
   formatCancel,
   formatRead,
@@ -20,8 +23,8 @@ import {
 
 export const name = 'dsh-baton-native'
 
-// sessionController is needed from M3 (wake-up injection); tools is the M1+ surface.
-export const inject = ['tools']
+// sessionController wakes the asking session when a run ends; tools is the M1+ surface.
+export const inject = ['tools', 'sessionController']
 
 const LOG_PREFIX = 'dsh-baton-native'
 const MAX_MESSAGE_BYTES = 64 * 1024
@@ -59,8 +62,14 @@ export function apply(ctx) {
   }
   const client = new BatonHost({ env: process.env, log: debug })
   const registry = new RunRegistry()
+  const home = batonHome()
+  const watcher = new RunWatcher({ client, registry, ctx, log, home })
 
-  ctx.effect(() => () => client.close(), `${LOG_PREFIX} host connection`)
+  ctx.effect(() => () => {
+    watcher.dispose()
+    client.close()
+  }, `${LOG_PREFIX} host connection and run watchers`)
+  watcher.resume()
 
   // Warm the connection and record the host version; a failure here is reported
   // by the first tool call instead of failing activation.
@@ -96,7 +105,7 @@ export function apply(ctx) {
 
   ctx.tools.register({
     name: 'baton_send',
-    description: 'Hand a task to an independent Harness session through dsh-baton and return immediately. The session runs live in the Harness sidebar. Omit session_id to start a new session (then cwd or workspace_id is required), or pass session_id to continue an existing session. Check progress with baton_status or baton_read; baton_cancel stops it.',
+    description: 'Hand a task to an independent Harness session through dsh-baton and return immediately. The session runs live in the Harness sidebar. Omit session_id to start a new session (then cwd or workspace_id is required), or pass session_id to continue an existing session. When the run ends, or stops to ask a person, this session receives one wake-up message with the result and dsh-baton evidence: changed files, check exit codes and output tails. Pass checks to have those commands run when the run ends. Check progress with baton_status or baton_read; baton_cancel stops it.',
     parameters: {
       type: 'object',
       additionalProperties: false,
@@ -130,6 +139,12 @@ export function apply(ctx) {
           type: 'string',
           description: 'Only when the user names a reasoning effort for this run.',
         },
+        checks: {
+          type: 'array',
+          maxItems: 10,
+          items: { type: 'string' },
+          description: 'The project\'s own test commands to run when the run ends, e.g. "npm test" or "python -m pytest". Their exit codes and output tails come back as evidence; never check scripts written just for the check.',
+        },
       },
       required: ['message'],
     },
@@ -146,6 +161,27 @@ export function apply(ctx) {
       }
       if (args.mode !== undefined && args.mode !== 'followup' && args.mode !== 'steer') {
         throw new Error('mode must be followup or steer.')
+      }
+      const checks = Array.isArray(args.checks)
+        ? args.checks.filter((check) => typeof check === 'string' && check.trim()).slice(0, 10)
+        : []
+      let evidenceCwd = typeof args.cwd === 'string' && args.cwd ? args.cwd : null
+      if (!evidenceCwd && args.workspace_id) {
+        try {
+          const list = await request('workspaces', {}, { timeoutMs: 15_000 })
+          evidenceCwd = Array.isArray(list)
+            ? list.find((workspace) => workspace?.id === String(args.workspace_id))?.path ?? null
+            : null
+        } catch {
+          // Evidence is optional; the task itself does not depend on it.
+        }
+      } else if (!evidenceCwd && args.session_id) {
+        try {
+          const info = await request('read_session', { session_id: String(args.session_id), last: 1 }, { timeoutMs: 15_000 })
+          evidenceCwd = info?.cwd ?? null
+        } catch {
+          // Evidence is optional.
+        }
       }
       const payload = { message: args.message }
       if (args.session_id) payload.session_id = String(args.session_id)
@@ -165,7 +201,18 @@ export function apply(ctx) {
         agentSessionId: agentSessionIdOf(exec),
         messagePreview: args.message.slice(0, 200),
         workspace: result.workspace ?? null,
+        checks,
+        evidenceCwd,
       })
+      if (evidenceCwd) {
+        prepare(home, {
+          run_id: String(result.run_id),
+          session_id: String(result.session_id),
+          cwd: evidenceCwd,
+          checks,
+        })
+      }
+      watcher.start(String(result.run_id))
       return formatSend(result)
     },
   })

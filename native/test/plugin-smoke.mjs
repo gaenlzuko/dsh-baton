@@ -3,7 +3,13 @@
 //
 // Run: node test/plugin-smoke.mjs   (needs a Harness with dsh-baton-host running)
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { apply } from '../index.js'
+
+// Keep the smoke test out of the real plugin state file.
+process.env.DSH_BATON_NATIVE_STATE = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-baton-smoke-state-'))
 
 const tools = []
 const disposers = []

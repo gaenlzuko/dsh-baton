@@ -14,6 +14,7 @@ const socketPath = path.join(tmp, 'host.sock')
 const stateDir = path.join(tmp, 'state')
 process.env.DSH_BATON_SOCKET = socketPath
 process.env.DSH_BATON_NATIVE_STATE = stateDir
+process.env.DSH_BATON_HOME = path.join(tmp, 'baton-home')
 const endpoint = socketEndpoint(socketPath)
 
 let lastSend = null
@@ -69,6 +70,16 @@ function reply({ method, params = {} }) {
         state: 'completed',
         final_text: 'all good',
         ended_at: '2026-11-23T00:00:00.000Z',
+      },
+    }
+  }
+  if (method === 'wait') {
+    return {
+      result: {
+        run_id: params.run_id ?? 'hrun-test-1',
+        session_id: 'sess-test-1',
+        state: 'completed',
+        final_text: 'done',
       },
     }
   }
