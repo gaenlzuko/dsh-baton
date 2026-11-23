@@ -81,8 +81,19 @@ export function formatCancel(result) {
   ].join('\n')
 }
 
-export function formatRuns(entries) {
-  if (!Array.isArray(entries) || entries.length === 0) return 'No baton runs have been started by this plugin yet.'
+export function formatAnswer(result) {
+  if (!result) return 'No answer result returned by the host.'
+  return [
+    `answer submitted for ${result.run_id ?? result.session_id ?? '?'}`,
+    `submitted: ${result.submitted === true ? 'yes' : 'no'}`,
+    ...(Array.isArray(result.remaining) && result.remaining.length > 0
+      ? [`remaining questions: ${result.remaining.join(', ')}; answer them with another baton_answer call.`]
+      : []),
+    ...(Array.isArray(result.answers) ? [`answers: ${clip(JSON.stringify(result.answers), 1200)}`] : []),
+  ].join('\n')
+}
+
+export function formatRuns(entries) {  if (!Array.isArray(entries) || entries.length === 0) return 'No baton runs have been started by this plugin yet.'
   return entries.map((entry) => {
     const delivered = entry.deliveredAt ? 'delivered' : 'pending wake-up'
     return `${entry.runId} | session ${entry.sessionId} | ${delivered} | asked by ${entry.agentSessionId ?? '?'} | ${clip(entry.messagePreview, 120)}`

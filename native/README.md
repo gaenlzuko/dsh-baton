@@ -4,9 +4,10 @@ Native DSH tools for [dsh-baton](https://github.com/JialaoLiu/dsh-baton) — rou
 [PLAN.md](./PLAN.md): no MCP, the plugin runs inside Harness and talks to the
 already-installed `dsh-baton-host` over its documented NDJSON socket.
 
-**Status (M3):** `baton_workspaces`, `baton_send`, `baton_status`, `baton_read`, `baton_cancel`,
-`baton_runs`; a finished run wakes the asking session once with changed files and check results.
-Remaining: `baton_answer`, restart-recovery polish, live end-to-end on a real Harness (M4–M6).
+**Status (M4, in progress):** `baton_workspaces`, `baton_send`, `baton_status`, `baton_read`,
+`baton_cancel`, `baton_answer`, `baton_runs`; a finished run wakes the asking session once with
+changed files and check results, and a delivered run is not woken again on plugin reload.
+Remaining: multi-run/restart polish and the live end-to-end run (M4–M6).
 
 ## Layout
 

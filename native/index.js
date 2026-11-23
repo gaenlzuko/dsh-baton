@@ -13,6 +13,7 @@ import { batonHome } from './lib/socket.js'
 import { prepare } from './lib/evidence.js'
 import { RunWatcher } from './lib/watcher.js'
 import {
+  formatAnswer,
   formatCancel,
   formatRead,
   formatRuns,
@@ -278,6 +279,61 @@ export function apply(ctx) {
       if (args.run_id) payload.run_id = String(args.run_id)
       if (args.session_id) payload.session_id = String(args.session_id)
       return formatCancel(await request('cancel', payload, { timeoutMs: 60_000 }))
+    },
+  })
+
+  ctx.tools.register({
+    name: 'baton_answer',
+    description: 'Answer the questions a dsh-baton run stopped to ask (the wake-up message says when it waits for a person). Pass one entry per question: option number or label in choose, or text for a single-choice question, or skip. A question that needs an approval in the Harness window cannot be answered here; tell the user to answer it there.',
+    parameters: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        run_id: { type: 'string', description: 'The run that is waiting for an answer.' },
+        session_id: { type: 'string', description: 'The session that is waiting, when run_id is not known.' },
+        answers: {
+          type: 'array',
+          minItems: 1,
+          description: 'One entry per open question.',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              id: { type: 'string', description: 'The question id when several questions are open.' },
+              choose: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Option numbers (as strings "1", "2") or option labels to select.',
+              },
+              text: { type: 'string', description: 'Free text; for a single-choice question it replaces the option.' },
+              skip: { type: 'boolean', description: 'Answer nothing for this question.' },
+            },
+          },
+        },
+      },
+      required: ['answers'],
+    },
+    output: textOutput(),
+    async execute(args = {}) {
+      if (!args.run_id && !args.session_id) throw new Error('run_id or session_id is required.')
+      if (!Array.isArray(args.answers) || args.answers.length === 0) {
+        throw new Error('answers must list at least one answer.')
+      }
+      const answers = args.answers.map((answer) => {
+        if (!answer || typeof answer !== 'object') throw new Error('each answer must be an object.')
+        const row = {}
+        if (answer.id !== undefined) row.id = String(answer.id)
+        if (Array.isArray(answer.choose) && answer.choose.length > 0) {
+          row.choose = answer.choose.map((value) => String(value))
+        }
+        if (typeof answer.text === 'string' && answer.text.trim()) row.text = answer.text
+        if (answer.skip === true) row.skip = true
+        return row
+      })
+      const payload = { answers }
+      if (args.run_id) payload.run_id = String(args.run_id)
+      if (args.session_id) payload.session_id = String(args.session_id)
+      return formatAnswer(await request('answer', payload, { timeoutMs: 30_000 }))
     },
   })
 

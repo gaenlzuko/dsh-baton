@@ -137,3 +137,25 @@ test('a finished run wakes the asking session once with evidence', async () => {
   const saved = JSON.parse(fs.readFileSync(path.join(stateDir, 'state.json'), 'utf8'))
   assert.ok(saved.runs['hrun-w1'].deliveredAt, 'the run should be marked delivered')
 })
+
+test('a delivered run is not woken again when the plugin reloads', async () => {
+  const captured2 = []
+  const disposers2 = []
+  const ctx2 = {
+    logger: { info() {}, debug() {}, warn() {}, error() {} },
+    tools: { register() {} },
+    effect: (callback) => {
+      const dispose = callback()
+      if (typeof dispose === 'function') disposers2.push(dispose)
+    },
+    sessionController: {
+      async resolveAgent() {
+        return { agent: { followup: (message) => captured2.push(message) } }
+      },
+    },
+  }
+  apply(ctx2)
+  await new Promise((resolve) => setTimeout(resolve, 300))
+  assert.equal(captured2.length, 0, 'a delivered run must not wake the session again')
+  for (const dispose of disposers2.reverse()) dispose()
+})

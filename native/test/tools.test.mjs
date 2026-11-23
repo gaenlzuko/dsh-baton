@@ -100,6 +100,9 @@ function reply({ method, params = {} }) {
   if (method === 'cancel') {
     return { result: { session_id: params.session_id ?? 'sess-test-1', attempts: 1, still_busy: false, queued_runs: [] } }
   }
+  if (method === 'answer') {
+    return { result: { run_id: params.run_id ?? 'hrun-test-1', submitted: true, answers: [{ id: 'q1', selected: ['yes'] }] } }
+  }
   return { error: `unexpected method ${method}` }
 }
 
@@ -130,6 +133,7 @@ const run = (name, args, exec = {}) => tools.get(name).execute(args, exec)
 
 test('registers the M2 tool surface', () => {
   assert.deepEqual([...tools.keys()].sort(), [
+    'baton_answer',
     'baton_cancel',
     'baton_read',
     'baton_runs',
@@ -176,6 +180,12 @@ test('baton_cancel reports the stop', async () => {
   const text = await run('baton_cancel', { session_id: 'sess-test-1' })
   assert.match(text, /cancel requested/)
   assert.match(text, /still busy: no/)
+})
+
+test('baton_answer submits answers for a waiting run', async () => {
+  const text = await run('baton_answer', { run_id: 'hrun-test-1', answers: [{ id: 'q1', choose: ['1'] }] })
+  assert.match(text, /answer submitted/)
+  assert.match(text, /submitted: yes/)
 })
 
 test('baton_runs lists the recorded run', async () => {

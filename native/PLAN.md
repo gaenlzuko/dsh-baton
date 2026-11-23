@@ -291,4 +291,5 @@ send ──► queued ──► running ──► (completed | failed | cancelle
 - 2026-11-23 M2：`baton_send` / `baton_status` / `baton_read` / `baton_cancel` / `baton_runs` 工具 + `lib/state.js`（run→发起会话登记）+ `lib/format.js`；假宿主测试覆盖请求形状、参数校验、状态/读取/取消渲染与登记表（`npm test` 12/12）。**尚未做真实会话创建**（等 M6 用隔离 socket + 临时 web 实例做端到端）。
 - 环境备注：`dsh plugin --profile web add link:<native>` 已把本插件装进 web profile；pnpm 顺带把该 profile 的 `dsh-baton-host` 从 0.6.16 升到 0.6.19（并加入 `dsh-baton-mcp`）。desktop profile 未改动。
 - 2026-11-23 M3：`lib/evidence.js`（复用上游证据模块，MIT 署名）、`lib/wake.js`（唤醒文本 + `agent.followup` 注入，source=`agent-message/relay`，不继承人类权限）、`lib/watcher.js`（每 run 一个长 `wait`，结束/提问/丢失时唤醒，断线退避重连）；`baton_send` 新增 `checks`、目录快照与 watcher 启动；`baton_runs` 显示投递状态。测试：`npm test` 15/15，含 watcher 端到端（发任务→改文件→run 结束→恰好一条唤醒，正文含 created/modified、`PASS node --version`、`all checks passed: yes`、核对表提示）。**真实 DSH 运行时未验证**（`sessionController.resolveAgent` + `agent.followup` + `agent-message` source 等 M6 实机确认）。
-- 下一步：M4（`baton_answer`、多 run 并发、插件重载/宿主重启恢复、去重完善）。
+- 2026-11-23 M4（部分）：`baton_answer` 工具（透传 `answers`）；插件重载后已投递的 run 不重复唤醒（`resume()` 只补未投递；测试 `npm test` 17/17，含 reload 去重用例）。待做：多 run 并发/宿主重启的真实场景验证、`input` 唤醒去重细化。
+- 下一步：M5 测试与文档收尾；随后 M6 用隔离 socket + 临时 `dsh web` 做真实 A→B→A 端到端。
