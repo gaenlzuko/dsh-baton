@@ -288,4 +288,5 @@ send ──► queued ──► running ──► (completed | failed | cancelle
   - `npm test`（`node --test "test/*.test.mjs"`）5/5：NDJSON 分包、错误回复、客户端超时、断线拒绝、长 wait 不带客户端超时；
   - `node test/plugin-smoke.mjs` 对运行中的 dsh-baton-host（0.6.19，pid 32692）返回 6 个 workspace；
   - `dsh --profile web --dump-config` 退出 0，组合树包含 `id: dsh-baton-native` 行（bundle 可被 profile 解析）。
-- 下一步：M2（`baton_send` / `baton_status` / `baton_read` / `baton_cancel` 工具 + B 会话创建与侧栏可见）。
+- 2026-11-23 M2：`baton_send` / `baton_status` / `baton_read` / `baton_cancel` / `baton_runs` 工具 + `lib/state.js`（run→发起会话登记）+ `lib/format.js`；假宿主测试覆盖请求形状、参数校验、状态/读取/取消渲染与登记表（`npm test` 12/12）。**尚未做真实会话创建**（等 M6 用隔离 socket + 临时 web 实例做端到端）。
+- 下一步：M3（每个 run 的长 `wait` watcher + `agent.followup/steer` 唤醒 + 证据链 `changes/checks/核对表`）。
