@@ -263,13 +263,8 @@ send ──► queued ──► running ──► (completed | failed | cancelle
 
 ## 15. Fork 与上游流程
 
-1. **创建 fork（需用户操作）**：当前机器无 `gh`、无 GitHub token；请在 <https://github.com/JialaoLiu/dsh-baton> 点 **Fork**（建议账号 `gaenlzuko`），或安装 `gh` 并 `gh auth login` 后由我执行 `gh repo fork`。
-2. 本地已克隆到 `dsh-baton/`；fork 创建后：
-   ```sh
-   git remote rename origin upstream
-   git remote add origin https://github.com/<user>/dsh-baton.git
-   git push -u origin feat/dsh-native
-   ```
+1. **Fork 已创建**（2026-11-23）：<https://github.com/gaenlzuko/dsh-baton>，parent `JialaoLiu/dsh-baton`。
+2. 本地 remotes：`origin` = fork，`upstream` = 上游；`feat/dsh-native` 已推送并跟踪 `origin/feat/dsh-native`。
 3. 开发在 `feat/dsh-native`；每个里程碑一个 commit；上游 `main` 定期 rebase。
 4. **PR 内容**：新增 `native/`（可选 bundle）、`docs/native.md`、测试；不改 MCP 行为；MIT 头保留；PR 说明 DSH 内部使用场景与与 dsh-baton-host 的关系；附验证记录。
 5. 若上游不接受：fork 独立维护/发布 `dsh-baton-native`，或转为独立仓库。
@@ -284,3 +279,13 @@ send ──► queued ──► running ──► (completed | failed | cancelle
 6. 子代理限制的工具面 API（`ctx.tools.restrict` / 预设层）在 0.2.2-rc.5 的可用性。
 7. 宿主 `approvals` 为 `ask` 时的唤醒措辞与用户流程。
 8. 是否需要在 A 侧显示"运行中"状态（后续可加 client 插件）。
+
+## 17. 进度记录
+
+- 2026-11-23 M0：本地克隆 0.6.19（`318b6cd`）、`native/PLAN.md`、分支 `feat/dsh-native`（commit `31952c6`）；fork 创建为 `gaenlzuko/dsh-baton`，remotes 已切换（origin=fork，upstream=上游），分支已推送。
+- 2026-11-23 M1：`native/` 骨架（package.json / cordis.patch.yml / index.js / lib/protocol.js / lib/socket.js / locale / icon / docs）与 `baton_workspaces` 工具；验证：
+  - `node --check` 全部通过；
+  - `npm test`（`node --test "test/*.test.mjs"`）5/5：NDJSON 分包、错误回复、客户端超时、断线拒绝、长 wait 不带客户端超时；
+  - `node test/plugin-smoke.mjs` 对运行中的 dsh-baton-host（0.6.19，pid 32692）返回 6 个 workspace；
+  - `dsh --profile web --dump-config` 退出 0，组合树包含 `id: dsh-baton-native` 行（bundle 可被 profile 解析）。
+- 下一步：M2（`baton_send` / `baton_status` / `baton_read` / `baton_cancel` 工具 + B 会话创建与侧栏可见）。
