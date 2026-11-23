@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Baton Native",
+    "description": "Native DSH tools for dsh-baton: hand a task to an independent Harness session and get an evidence-backed result back when it ends.",
+    "detail": "docs/DETAIL.md"
+  }
+}

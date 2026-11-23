@@ -1,0 +1,4 @@
+# dsh-baton-native bundle layer: mounts the single native tools row.
+- insert:
+    - id: dsh-baton-native
+      name: dsh-baton-native

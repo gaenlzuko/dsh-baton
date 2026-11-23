@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Baton 原生工具",
+    "description": "dsh-baton 的 DSH 原生工具：把任务交给独立 Harness 会话，结束时把带证据的结果带回发起会话。",
+    "detail": "docs/DETAIL.md"
+  }
+}
