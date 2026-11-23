@@ -10,7 +10,7 @@ evidence — changed files, checks that ran, and a requirement-by-requirement re
 
 ## Status
 
-M4 in progress: task tools, wake-up and answers.
+Verified live (A → B → A) on DeepSeek Harness 0.2.2-rc.5 — see [E2E.md](E2E.md).
 
 - Tools: `baton_workspaces`, `baton_send`, `baton_status`, `baton_read`, `baton_cancel`,
   `baton_answer`, `baton_runs`.
@@ -19,7 +19,7 @@ M4 in progress: task tools, wake-up and answers.
   exit codes/output and the final reply (including any requirement table); a run that stops to
   ask a person wakes the asking session too, and `baton_answer` submits the answers.
 - A delivered run is not woken again when the plugin reloads.
-- Remaining: multi-run/restart polish and live end-to-end verification.
+- Remaining: multi-run/restart scenarios and the upstream PR.
 
 ## Requirements
 
